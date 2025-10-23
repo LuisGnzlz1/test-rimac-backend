@@ -151,9 +151,7 @@ npm run format
 
 ### Base URL
 
-- **Local**: `http://localhost:3000/dev`
-- **Dev**: `https://your-api-id.execute-api.us-east-1.amazonaws.com/dev`
-- **Prod**: `https://your-api-id.execute-api.us-east-1.amazonaws.com/prod`
+- **Dev**: `https://2yqr779nki.execute-api.us-east-1.amazonaws.com/dev`
 
 ### 1. Crear Agendamiento
 
