@@ -8,8 +8,6 @@ coverage/
 *.js
 *.d.ts
 *.js.map
-!jest.config.js
-!.eslintrc.js
 
 # Logs
 logs
@@ -21,6 +19,7 @@ yarn-error.log*
 lerna-debug.log*
 
 # dotenv environment variable files
+.env*
 .env
 .env.local
 .env.development

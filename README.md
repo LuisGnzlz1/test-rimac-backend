@@ -1,69 +1,336 @@
-<!--
-title: 'AWS Simple HTTP Endpoint example in NodeJS'
-description: 'This template demonstrates how to make a simple HTTP API with Node.js running on AWS Lambda and API Gateway using the Serverless Framework.'
-layout: Doc
-framework: v4
-platform: AWS
-language: nodeJS
-authorLink: 'https://github.com/serverless'
-authorName: 'Serverless, Inc.'
-authorAvatar: 'https://avatars1.githubusercontent.com/u/13742415?s=200&v=4'
--->
+# Appointment Service
 
-# Serverless Framework Node HTTP API on AWS
+Sistema backend serverless para gestión de agendamientos en Perú y Chile, construido con AWS Lambda, TypeScript y Clean Architecture.
 
-This template demonstrates how to make a simple HTTP API with Node.js running on AWS Lambda and API Gateway using the Serverless Framework.
+---
 
-This template does not include any kind of persistence (database). For more advanced examples, check out the [serverless/examples repository](https://github.com/serverless/examples/) which includes Typescript, Mongo, DynamoDB and other examples.
+## 📋 Tabla de Contenidos
 
-## Usage
+- [Requisitos Previos](#requisitos-previos)
+- [Instalación](#instalación)
+- [Configuración](#configuración)
+- [Ejecución Local](#ejecución-local)
+- [Despliegue](#despliegue)
+- [Pruebas](#pruebas)
+- [Endpoints](#endpoints)
+- [Estructura del Proyecto](#estructura-del-proyecto)
 
-### Deployment
+---
 
-In order to deploy the example, you need to run the following command:
+## 🔧 Requisitos Previos
 
-```
-serverless deploy
-```
+- **Node.js** >= 22.x
+- **npm** >= 9.x
+- **AWS CLI** configurado con credenciales
+- **MySQL** (para desarrollo local)
+- **AWS Account** con permisos para:
+    - Lambda
+    - API Gateway
+    - DynamoDB
+    - SNS
+    - SQS
+    - EventBridge
+    - RDS
 
-After running deploy, you should see output similar to:
+---
 
-```
-Deploying "serverless-http-api" to stage "dev" (us-east-1)
+## 📦 Instalación
 
-✔ Service deployed to stack serverless-http-api-dev (91s)
+```bash
+# 1. Clonar el repositorio
+git clone https://github.com/LuisGnzlz1/test-rimac-backend
+cd test-rimac-backend
 
-endpoint: GET - https://xxxxxxxxxx.execute-api.us-east-1.amazonaws.com/
-functions:
-  hello: serverless-http-api-dev-hello (1.6 kB)
-```
-
-_Note_: In current form, after deployment, your API is public and can be invoked by anyone. For production deployments, you might want to configure an authorizer. For details on how to do that, refer to [HTTP API (API Gateway V2) event docs](https://www.serverless.com/framework/docs/providers/aws/events/http-api).
-
-### Invocation
-
-After successful deployment, you can call the created application via HTTP:
-
-```
-curl https://xxxxxxx.execute-api.us-east-1.amazonaws.com/
+# 2. Instalar dependencias
+npm install
 ```
 
-Which should result in response similar to:
+---
 
+## ⚙️ Configuración
+
+### 1. Variables de Entorno
+
+Crear archivo `.env` en la raíz del proyecto:
+
+```bash
+# Copiar el archivo de ejemplo
+cp .env.example .env
+```
+
+### 2. Editar `.env` con tus credenciales:
+
+```bash
+# AWS Configuration
+AWS_REGION=us-east-1
+AWS_PROFILE=default
+STAGE=dev
+
+# RDS MySQL - PERÚ
+RDS_PE_HOST=localhost
+RDS_PE_USER=dev_user
+RDS_PE_PASSWORD=dev_password
+RDS_PE_DATABASE=appointments_db
+RDS_PE_PORT=3306
+
+# RDS MySQL - CHILE
+RDS_CL_HOST=localhost
+RDS_CL_USER=dev_user
+RDS_CL_PASSWORD=dev_password
+RDS_CL_DATABASE=appointments_db
+RDS_CL_PORT=3306
+```
+
+---
+
+## 🌐 Despliegue
+
+### Desplegar a Development
+
+```bash
+npm run deploy:dev
+```
+
+### Desplegar a Production
+
+```bash
+npm run deploy:prod
+```
+
+### Ver información del despliegue
+
+```bash
+serverless info --stage dev
+```
+
+### Eliminar el stack
+
+```bash
+serverless remove --stage dev
+```
+
+---
+
+## 🧪 Pruebas
+
+### Ejecutar todas las pruebas
+
+```bash
+npm test
+```
+
+### Pruebas en modo watch
+
+```bash
+npm run test:watch
+```
+
+### Coverage report
+
+```bash
+npm run test:coverage
+```
+
+El reporte estará disponible en: `coverage/lcov-report/index.html`
+
+### Linter
+
+```bash
+npm run lint
+```
+
+### Format code
+
+```bash
+npm run format
+```
+
+---
+
+## 📡 Endpoints
+
+### Base URL
+
+- **Local**: `http://localhost:3000/dev`
+- **Dev**: `https://your-api-id.execute-api.us-east-1.amazonaws.com/dev`
+- **Prod**: `https://your-api-id.execute-api.us-east-1.amazonaws.com/prod`
+
+### 1. Crear Agendamiento
+
+**POST** `/appointments`
+
+**Request:**
 ```json
-{ "message": "Go Serverless v4! Your function executed successfully!" }
+{
+  "insuredId": "00123",
+  "scheduleId": 100,
+  "countryISO": "PE"
+}
 ```
 
-### Local development
+**Response (201):**
+```json
+{
+  "message": "Agendamiento en proceso",
+  "data": {
+    "id": "550e8400-e29b-41d4-a716-446655440000",
+    "insuredId": "00123",
+    "scheduleId": 100,
+    "countryISO": "PE",
+    "status": "pending",
+    "createdAt": "2024-10-22T10:00:00Z"
+  }
+}
+```
+---
 
-The easiest way to develop and test your function is to use the `dev` command:
+### 2. Listar Agendamientos por Asegurado
+
+**GET** `/appointments/{insuredId}`
+
+**Parámetros:**
+- `insuredId` (path): Código del asegurado (5 dígitos)
+
+**Response (200):**
+```json
+{
+  "insuredId": "00123",
+  "total": 2,
+  "appointments": [
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440000",
+      "insuredId": "00123",
+      "scheduleId": 100,
+      "countryISO": "PE",
+      "status": "completed",
+      "createdAt": "2024-10-22T10:00:00Z",
+      "updatedAt": "2024-10-22T10:05:00Z"
+    }
+  ]
+}
+```
+---
+
+### 3. Documentación Swagger
+
+**GET** `/doc`
+
+---
+
+## 📁 Estructura del Proyecto
 
 ```
-serverless dev
+test-rimac-backend/
+├── src/
+│   ├── domain/                      # Capa de Dominio
+│   │   ├── entities/               # Entidades (Appointment)
+│   │   ├── repositories/           # Interfaces de repositorios
+│   │   ├── services/               # Interfaces de servicios
+│   │   └── validators/             # Validaciones con Zod
+│   │
+│   ├── application/                # Capa de Aplicación
+│   │   └── use-cases/              # Casos de uso (SOLID)
+│   │       ├── create-appointment.ts
+│   │       ├── list-appointments.ts
+│   │       ├── process-country-appointment.ts
+│   │       └── update-appointment.ts
+│   │
+│   ├── infra/             # Capa de Infraestructura
+│   │   ├── dynamodb-repository.ts          
+│   │   ├── event-bridge-publisher.ts          
+│   │   ├── rds-repository.ts          
+│   │   └── sns-message-publisher.ts            
+│   │
+│   ├── handlers/                   # Lambda Handlers
+│       ├── appointment.ts          # POST + GET + Update
+│       ├── appointment-country.ts  # Process PE/CL
+│       └── swagger.ts             # Documentación
+│
+├── database/                       # Scripts de base de datos
+│   └── schema.sql
+│
+│
+│
+├── serverless.yml                  # Configuración Serverless
+├── package.json                    # Dependencias
+├── tsconfig.json                   # Configuración TypeScript
+├── jest.config.js                  # Configuración Jest
+└── .env                            # Variables de entorno (no commitear)
 ```
 
-This will start a local emulator of AWS Lambda and tunnel your requests to and from AWS Lambda, allowing you to interact with your function as if it were running in the cloud.
+---
 
-Now you can invoke the function as before, but this time the function will be executed locally. Now you can develop your function locally, invoke it, and see the results immediately without having to re-deploy.
+## 🏗️ Arquitectura
 
-When you are done developing, don't forget to run `serverless deploy` to deploy the function to the cloud.
+```
+Cliente → API Gateway → Lambda appointment
+                           ↓
+                      DynamoDB (pending)
+                           ↓
+                       SNS Topic
+            ┌──────────┴──────────┐
+            ↓                     ↓
+       SQS (PE)               SQS (CL)
+            ↓                     ↓
+  Lambda appointmentPE   Lambda appointmentCL
+            ↓                     ↓
+     RDS MySQL (PE)         RDS MySQL (CL)
+            ↓                     ↓
+            └────→ EventBridge ←──┘
+                       ↓
+                  SQS (completed)
+                       ↓
+          Lambda appointment (update)
+                       ↓
+              DynamoDB (completed)
+```
+
+---
+
+## 🎯 Principios Aplicados
+
+- ✅ **Clean Architecture**: Separación en capas (Domain, Application, Infrastructure)
+- ✅ **SOLID**: Cada clase tiene una única responsabilidad
+- ✅ **DDD**: Entidades ricas con lógica de negocio
+- ✅ **Dependency Inversion**: Casos de uso dependen de interfaces
+- ✅ **Repository Pattern**: Abstracción de persistencia
+- ✅ **Event-Driven**: Comunicación asíncrona con eventos
+
+---
+
+## 📊 Tecnologías
+
+- **Runtime**: Node.js 18.x, TypeScript 5.x
+- **Framework**: Serverless Framework 3.x
+- **AWS Services**: Lambda, API Gateway, DynamoDB, SNS, SQS, EventBridge, RDS
+- **Database**: MySQL 8.0
+- **Validation**: Zod
+- **Testing**: Jest
+- **Linting**: ESLint + Prettier
+
+---
+
+## 🔐 Validaciones
+
+### insuredId
+- ✅ Exactamente 5 dígitos
+- ✅ Solo números
+- ✅ Puede incluir ceros al inicio (ej: "00123")
+
+### scheduleId
+- ✅ Número entero positivo
+- ✅ Mayor a 0
+
+### countryISO
+- ✅ Solo "PE" o "CL"
+- ✅ Case sensitive
+
+---
+
+## 📈 Estados del Agendamiento
+
+| Estado | Descripción |
+|--------|-------------|
+| `pending` | Agendamiento creado, esperando procesamiento |
+| `completed` | Procesado exitosamente |
+| `failed` | Error en el procesamiento |

@@ -3,13 +3,18 @@ import type { Config } from 'jest';
 const config: Config = {
     preset: 'ts-jest',
     testEnvironment: 'node',
-    roots: ['<rootDir>/src/test'],
+    roots: ['<rootDir>/src'],
     moduleFileExtensions: ['ts', 'js', 'json'],
     coverageProvider: 'v8',
-    testMatch: ['**/__tests__/**/*.ts', '**/?(*.)+(spec|test).ts'],
-    transform: {
-        '^.+\\.ts$': 'ts-jest',
-    },
+    testTimeout: 11000,
+    testMatch: [
+        '**/__tests__/**/*.ts',
+        '**/?(*.)+(spec|test).ts',
+        '**/test/**/*.ts'
+    ],
+
+    transform: { '^.+\\.ts$': 'ts-jest' },
+
     collectCoverageFrom: [
         'src/**/*.ts',
         '!src/**/*.d.ts',
@@ -18,18 +23,18 @@ const config: Config = {
     ],
     coverageDirectory: 'coverage',
     coverageReporters: ['text', 'lcov', 'html'],
+
     moduleNameMapper: {
         '^@/(.*)$': '<rootDir>/src/$1',
     },
-    setupFilesAfterEnv: ['<rootDir>/src/test/setup.ts'],
+
+    setupFilesAfterEnv: [],
+
     coverageThreshold: {
-        global: {
-            branches: 80,
-            functions: 80,
-            lines: 80,
-            statements: 80,
-        },
+        global: { branches: 80, functions: 80, lines: 80, statements: 80 },
     },
+
+    testPathIgnorePatterns: ['/node_modules/', '/dist/', '/.serverless/'],
 };
 
 export default config;
